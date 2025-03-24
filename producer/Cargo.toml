@@ -1,0 +1,15 @@
+[package]
+name = "producer"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.97"
+aws-config = { version = "1.6.0", features = ["behavior-version-latest"] }
+aws-sdk-s3 = "1.79.0"
+aws-sdk-sqs = "1.62.0"
+aws_lambda_events = { version = "0.16.0", default-features = false, features = ["s3"] }
+lambda_runtime = { version = "0.13.0", features = ["anyhow"] }
+serde = { version = "1.0.219", features = ["derive"] }
+tokio = { version = "1.44.1", features = ["full"] }
+uuid = { version = "1.16.0", features = ["v4"] }
