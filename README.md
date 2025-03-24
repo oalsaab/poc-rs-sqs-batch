@@ -8,7 +8,7 @@ The purpose is to demonstrate how to handle batch processing (somewhat) efficien
 
 ## Flow
 
-A CSV file is uploaded to S3, which triggers a Lambda function. The Lambda reads the file line by line (asynchronously) and sends each entry to SQS.
+A CSV file is uploaded to S3, which triggers a producer Lambda. The Lambda reads the file line by line (asynchronously) and sends each entry, in batches, to SQS.
 
 SQS batches the messages and invokes a consumer Lambda, which processes the batch and performs a batch write to DynamoDB. The [ReportBatchItemFailures](https://docs.aws.amazon.com/lambda/latest/dg/services-ddb-batchfailurereporting.html) (partial batch response) mechanism ensures that only failed items are retried instead of the entire batch.
 
