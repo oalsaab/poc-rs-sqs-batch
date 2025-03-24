@@ -5,6 +5,8 @@ use lambda_runtime::tracing;
 
 pub async fn get_aws_config() -> SdkConfig {
     let version = BehaviorVersion::v2025_01_17();
+    // Disabling retries to prevent blocking lambda from receiving new batch of messages
+    // Retryable errors are handled explicitly by returning message IDs to SQS queue
     let retry_config = RetryConfig::disabled();
 
     aws_config::defaults(version)
