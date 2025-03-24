@@ -28,7 +28,7 @@ impl Item {
         ])
     }
 
-    fn to_wr(&self) -> WriteRequest {
+    fn write_request(&self) -> WriteRequest {
         WriteRequest::builder()
             .put_request(
                 PutRequest::builder()
@@ -56,14 +56,17 @@ impl Batch {
         Batch { records }
     }
 
-    fn to_wrs(&self) -> Vec<WriteRequest> {
-        self.records.iter().map(|r| r.item.to_wr()).collect()
+    fn write_requests(&self) -> Vec<WriteRequest> {
+        self.records
+            .iter()
+            .map(|r| r.item.write_request())
+            .collect()
     }
 
     fn parial_failure(&self, wrs: &[WriteRequest]) -> Vec<BatchItemFailure> {
         self.records
             .iter()
-            .filter(|record| wrs.contains(&record.item.to_wr()))
+            .filter(|record| wrs.contains(&record.item.write_request()))
             .map(|record| BatchItemFailure {
                 item_identifier: record.message_id.clone(),
             })
@@ -121,7 +124,7 @@ impl Process {
             let table = Arc::clone(&self.ddb_table);
 
             self.tasks.spawn(async move {
-                let out = batch_write_item(&batch, &table, &ddb_client).await;
+                let out = batch_write_item(&ddb_client, &table, &batch).await;
 
                 match out {
                     Ok(out) => Ok(Self::handle_output(&batch, &table, &out)),
@@ -175,13 +178,13 @@ impl Process {
 }
 
 async fn batch_write_item(
-    batch: &Batch,
-    table: &str,
     ddb_client: &aws_sdk_dynamodb::Client,
+    table: &str,
+    batch: &Batch,
 ) -> Result<BatchWriteItemOutput, BatchWriteItemError> {
     ddb_client
         .batch_write_item()
-        .request_items(table, batch.to_wrs())
+        .request_items(table, batch.write_requests())
         .send()
         .await
         .map_err(|e| e.into_service_error())
